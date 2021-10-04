@@ -8,15 +8,16 @@ import List from "./Components/List";
 import TasksCompleted from "./Components/TasksCompleted";
 import IncompletedTasks from "./Components/IncompletedTasks";
 import Footer from "./Components/Footer";
-// import ErasedTasks from "./Components/ErasedTasks";
+import ErasedTasks from "./Components/ErasedTasks";
 
 const App = () => {
   //State
   const [listItems, setListItems] = useState([
     { title: "Sacar la basura", status: false },
   ]);
-  const [erasedTasks, setErasedTasks] = useState([]);
-
+  const [deleteTasks, setDeleteTasks] = useState([
+    { title: "Pasear perros", status: true },
+  ]);
 
   useEffect(() => {
     let data = localStorage.getItem("tasks");
@@ -30,6 +31,19 @@ const App = () => {
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(listItems));
   }, [listItems]);
+
+  useEffect(() => {
+    let data = localStorage.getItem("trash");
+    if (data !== null) {
+      setDeleteTasks(JSON.parse(data));
+    } else {
+      setDeleteTasks([{ title: "Pasear perros", status: true }]);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("trash", JSON.stringify(deleteTasks));
+  }, [deleteTasks]);
 
   //Funciones
   const createNewTask = (taskName) => {
@@ -47,24 +61,21 @@ const App = () => {
       )
     );
 
-  const taskTableRows = (statusValue) =>
-    listItems
-      .filter((task) => task.status === statusValue)
-      .map((task) => (
-        <List key={task.title} task={task} toggleTask={toggleTask}/>
-      ));
+  // const taskTableRows = (statusValue) =>
+  //   listItems
+  //     .filter((task) => task.status === statusValue)
+  //     .map((task) => (
+  //       <List key={task.title} task={task} toggleTask={toggleTask}/>
+  //     ));
 
-      
   return (
     <Router>
-    <div className=" flex flex-col items-center justify-start h-screen w-screen">
-      <Header listItems={listItems} />
-      <div>
-        <ToDo createNewTask={createNewTask} />
+      <div className=" flex flex-col items-center justify-start h-screen w-screen bg-gradient-to-r from-yellow via-orange-500 to-pink">
+        <Header listItems={listItems} />
+        <div className="w-full flex flex-col items-center bg-yellow h-3/5 mt-10 md:w-3/5  bg-gradient-to-r from-pink via-orange-500 to-yellow overflow-y-scroll">
+          <ToDo createNewTask={createNewTask} />
 
-       
           <Switch>
-
             <Route path="/" exact>
               {listItems.map((task, index) => (
                 <List
@@ -74,77 +85,45 @@ const App = () => {
                   listItems={listItems}
                   setListItems={setListItems}
                   toggleTask={toggleTask}
-                  setErasedTasks= {setErasedTasks}
-                  erasedTasks= {erasedTasks}
-
+                  deleteTasks={deleteTasks}
+                  setDeleteTasks={setDeleteTasks}
                 />
               ))}
             </Route>
 
             <Route path="/incompleted" exact>
-              <IncompletedTasks taskTableRows={taskTableRows}  />
+              <IncompletedTasks
+                listItems={listItems}
+                toggleTask={toggleTask}
+                setListItems={setListItems}
+              />
             </Route>
 
             <Route path="/completed" exact>
-              <TasksCompleted listItems={ listItems} toggleTask= {toggleTask} setListItems={setListItems} />
+              <TasksCompleted
+                listItems={listItems}
+                toggleTask={toggleTask}
+                setListItems={setListItems}
+                deleteTasks={deleteTasks}
+                setDeleteTasks={setDeleteTasks}
+              />
             </Route>
-          
+
+            <Route path="/erased" exact>
+              {deleteTasks.map((task, index) => (
+                <ErasedTasks
+                  task={task}
+                  deleteTasks={deleteTasks}
+                  setDeleteTasks={setDeleteTasks}
+                  index={index}
+                  key={task.title}
+                />
+              ))}
+            </Route>
           </Switch>
-       
-
-        <Footer />
-
-        {/* <div className="flex items-center justify-between">
-          <AllTasks
-            listItems={listItems}
-            callback={(checked) => setListItems(checked)}
-          />
-          <div>
-            <h1 className="text-pink">{taskTableRows(false)}</h1>
-            <h1 className="text-pink">{taskTableRows(true)}</h1>
-          </div>
-
-          <IncompletedTasks
-            incompletedTasks={incompletedTasks}
-            callback={(checked) => setIncompletedTasks(checked)}
-          />
-          {incompletedTasks && (
-            <div className="flex flex-col">
-              <h1 className="text-pink">{taskTableRows(false)}</h1>
-            </div>
-          )}
-
-          <TasksCompleted
-            completedTasks={completedTasks}
-            callback={(checked) => setCompletedTasks(checked)}
-          />
-          {completedTasks && (
-            <div>
-              <h1 className="text-pink">{taskTableRows(true)}</h1>
-              <button>Eliminar</button>
-            </div>
-          )}
-
-          <ErasedTasks />
-          
-        </div> */}
-        {/* {listItems.map((task => (
-          <h1>{task.title}</h1>
-        )))}
-        <h1>{taskTableRows(false)}</h1>
-        <div>
-          <TasksCompleted
-            isChecked={completedTasks}
-            callback={checked => setCompletedTasks(checked)}
-          />
         </div>
-
-        {completedTasks && (
-            <h1 className= "text-pink">{taskTableRows(true)}</h1>
-        )}
-       */}
+        <Footer />
       </div>
-    </div>
     </Router>
   );
 };
